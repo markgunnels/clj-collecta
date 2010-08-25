@@ -1,0 +1,72 @@
+(ns collecta.core
+  (:use (xmpp-clj))
+  (:require [clojure.xml :as xml])
+  (:import (org.jivesoftware.smack ConnectionConfiguration
+                                   XMPPConnection
+                                   PacketListener)
+           (org.jivesoftware.smack.filter PacketFilter
+                                          MessageTypeFilter)
+           (org.jivesoftware.smack.packet IQ
+                                          IQ$Type
+                                          Message
+                                          Message$Type)
+           (java.io ByteArrayInputStream) ))
+
+(def conn (new XMPPConnection
+               (new ConnectionConfiguration "guest.collecta.com")))
+
+(defn packet-filter
+  []
+  (proxy [PacketFilter] [] 
+                      (accept [packet] true)))
+
+
+(defn packet-listener
+  []
+  (proxy [PacketListener] []
+    (processPacket
+     [packet]
+     (let [pe (.getExtension packet "event" "http://jabber.org/protocol/pubsub#event")]
+       (if (not (nil? pe))
+         (do 
+             (println (clojure.xml/parse (ByteArrayInputStream. (.getBytes (.toXML pe) "UTF-8")) ))))))))
+
+(defn iq-search-packet
+  [term jid apikey]
+  (proxy [IQ] []
+    (getChildElementXML
+     []
+     (str  "<pubsub xmlns='http://jabber.org/protocol/pubsub'>" +
+           "<subscribe jid='" jid "' node='search'/>" 
+           "<options>" 
+           "<x xmlns='jabber:x:data' type='submit'>" 
+           "<field var='FORM_TYPE' type='hidden'>" 
+           "<value>http://jabber.org/protocol/pubsub#subscribe_options</value>" 
+           "</field>"
+           "<field var='x-collecta#apikey'>"
+           "<value>" apikey "</value>" 
+           "</field>"
+           "<field var='x-collecta#query'>"
+           "<value>" term "</value>"
+           "</field>" 
+           "</x></options>"
+           "</pubsub>"))))
+
+(doto conn
+  (.connect)
+  (.loginAnonymously)
+  (.addPacketListener (packet-listener) (packet-filter)))
+
+(def iq-packet (iq-search-packet "love" (.getUser conn) "956718aa639f309c0c3d3dd221c9da2d"))
+
+(doto iq-packet
+  (.setType IQ$Type/SET)
+  (.setFrom (.getUser conn))
+  (.setTo "search.collecta.com"))
+
+(.sendPacket conn iq-packet)
+
+;iqPacket.setType(IQ.Type.SET);
+;        iqPacket.setFrom(connection.getUser());
+;        iqPacket.setTo("search.collecta.com");
+;        connection.sendPacket(iqPacket);
