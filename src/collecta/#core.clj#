@@ -12,7 +12,7 @@
                                           Message$Type)
            (java.io ByteArrayInputStream) ))
 
-(def COLLECTA-CONNECTION-ENDPOINT )
+(def COLLECTA-CONNECTION-ENDPOINT "guest.collecta.com")
 
 (def conn (new XMPPConnection
                (new ConnectionConfiguration "guest.collecta.com")))
