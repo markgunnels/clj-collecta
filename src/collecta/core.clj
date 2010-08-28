@@ -49,7 +49,7 @@
      [packet]
      (let [pe (extract-event-packet-extension packet)]
        (if (not (nil? pe))
-         (apply processing-fn) (packet-to-xml pe))))))
+         (apply processing-fn (packet-to-xml pe)))))))
 
 ;; todo: Build the xml message with prxml.
 ;;       Allow more than one query term to be submitted.
