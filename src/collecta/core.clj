@@ -12,27 +12,47 @@
                                           Message$Type)
            (java.io ByteArrayInputStream) ))
 
-(def COLLECTA-CONNECTION-ENDPOINT )
+(def *COLLECTA-CONNECTION-URL* "guest.collecta.com")
+(def *COLLECTA-SEARCH-URL* "search.collecta.com")
+(declare *collecta-connection*)
 
-(def conn (new XMPPConnection
-               (new ConnectionConfiguration "guest.collecta.com")))
+(defn- create-connection
+  (new XMPPConnection
+       (new ConnectionConfiguration *COLLECTA-CONNECTION-URL*)))
+
+(defn- establish-connection
+  []
+  (let [conn (create-connection)]
+    (doto conn
+      (.connect)
+      (.loginAnonymously)
+      (.addPacketListener (packet-listener) (packet-filter)))))
 
 (defn packet-filter
   []
   (proxy [PacketFilter] [] 
-                      (accept [packet] true)))
+    (accept [packet] true)))
 
+(defn- extract-event-packet
+  [packet]
+  (.getExtension packet "event" "http://jabber.org/protocol/pubsub#event"))
+
+(defn packet-to-xml
+  [packet-event]
+  (clojure.xml/parse
+   (ByteArrayInputStream. (.getBytes (.toXML pe) "UTF-8"))))
 
 (defn packet-listener
-  []
+  [processing-fn]
   (proxy [PacketListener] []
     (processPacket
      [packet]
-     (let [pe (.getExtension packet "event" "http://jabber.org/protocol/pubsub#event")]
+     (let [pe (extract-event-packet-extension packet)]
        (if (not (nil? pe))
-         (do 
-             (println (clojure.xml/parse (ByteArrayInputStream. (.getBytes (.toXML pe) "UTF-8")) ))))))))
+         (apply processing-fn) (packet-to-xml pe))))))
 
+;; todo: Build the xml message with prxml.
+;;       Allow more than one query term to be submitted.
 (defn iq-search-packet
   [term jid apikey]
   (proxy [IQ] []
@@ -54,21 +74,12 @@
            "</x></options>"
            "</pubsub>"))))
 
-(doto conn
-  (.connect)
-  (.loginAnonymously)
-  (.addPacketListener (packet-listener) (packet-filter)))
-
 (def iq-packet (iq-search-packet "$AAPL" (.getUser conn) "956718aa639f309c0c3d3dd221c9da2d"))
 
 (doto iq-packet
   (.setType IQ$Type/SET)
   (.setFrom (.getUser conn))
-  (.setTo "search.collecta.com"))
+  (.setTo *COLLECTA-SEARCH-URL*))
 
 (.sendPacket conn iq-packet)
-
-(defmacro with-connection
-  [-spec]
-  )
 
