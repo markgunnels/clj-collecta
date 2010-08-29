@@ -10,7 +10,14 @@ clj-collecta is a library for streaming events from the Collecta real-time searc
 
 ## Installation
 
+Eventually I'll push this to clojars for use from Leiningen.
 FIXME: write
+
+## TODO
+
+* Comment the code. :-)
+* Reuse the connection object.
+* Enable the ability to concurrently process messages.
 
 ## License
 
