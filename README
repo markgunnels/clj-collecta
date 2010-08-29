@@ -1,12 +1,12 @@
 # collecta
 
-* Based on Mike Thompson's example code on the Collecta Github repository.
-
-FIXME: write description
+clj-collecta is a library for streaming events from the Collecta real-time search service 
+* Based on Mike Thompson's example code on the Collecta Github repository and eventually will incorporate ideas from http://github.com/ashafa/nozzle.
 
 ## Usage
 
-FIXME: write
+(require 'collecta.core)
+(collecta.core/search-collecta your-api-key your-search-term callback-fn)
 
 ## Installation
 
