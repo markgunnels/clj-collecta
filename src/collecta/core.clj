@@ -88,6 +88,3 @@
   [api-key term on-result-fn]
   (let [conn (establish-connection on-result-fn)]
     (.sendPacket conn (make-iq-packet api-key term conn))))
-
-
-;"956718aa639f309c0c3d3dd221c9da2d"
