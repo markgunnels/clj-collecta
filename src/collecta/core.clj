@@ -10,7 +10,7 @@
                                           IQ$Type
                                           Message
                                           Message$Type)
-           (java.io ByteArrayInputStream) ))
+           (java.io ByteArrayInputStream)))
 
 (def *COLLECTA-CONNECTION-URL* "guest.collecta.com")
 (def *COLLECTA-SEARCH-URL* "search.collecta.com")
@@ -77,6 +77,7 @@
     conn))
 
 (defn- make-iq-packet
+  ""
   [api-key term conn]
   (let [iq-packet (iq-search-packet term (.getUser conn) api-key)]
     (doto iq-packet
